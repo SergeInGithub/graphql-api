@@ -1,4 +1,4 @@
-# graphql-api
+# 💠 graphql-api
 
 ## ℹ️ Description
 This is A full-stack app built to explore and demonstrate some advantages of building a GraphQL API 
