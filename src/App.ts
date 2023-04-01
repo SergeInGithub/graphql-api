@@ -1,3 +1,4 @@
+import postgraphile from 'postgraphile';
 import express from 'express';
 import { DataSource } from 'typeorm';
 import { Product } from './entity/Product';
@@ -7,10 +8,69 @@ import { Supplier } from './entity/Supplier';
 import { Uom } from './entity/Uom';
 import { Warehouse } from './entity/Warehouse';
 import { AppDataSource } from './data-source';
+import { makeExtendSchemaPlugin, gql } from 'postgraphile';
+import { registerTransaction } from './service/inventory';
+
+const RegisterTransactionPlugin = makeExtendSchemaPlugin((_build) => {
+  return {
+    typeDefs: gql`
+      input RegisterTransactionInput {
+        type: InventoryTransactionTypeEnum!
+        productId: Int!
+        warehouseId: Int!
+        quantity: Int!
+      }
+
+      type RegisterTransactionPayload {
+        transactionId: Int
+        productId: Int
+        warehouseId: Int
+        updatedQuantity: Int
+      }
+
+      extend type Mutation {
+        registerTransaction(
+          input: RegisterTransactionInput!
+        ): RegisterTransactionPayload
+      }
+    `,
+    resolvers: {
+      Mutation: {
+        registerTransaction: async (_query, args, _context, _resolveInfo) => {
+          try {
+            const { type, productId, warehouseId, quantity } = args.input;
+            const inventoryTransaction = await registerTransaction(
+              type,
+              productId,
+              warehouseId,
+              quantity,
+            );
+            return { ...inventoryTransaction };
+          } catch (e) {
+            console.error('Error registering transaction', e);
+            throw e;
+          }
+        },
+      },
+    },
+  };
+});
 
 const App = () => {
   const app = express();
   app.use(express.json());
+  app.use(
+    postgraphile(
+      `postgres://postgres:TakingAction@localhost:5432/catalog_db`,
+      'public',
+      {
+        watchPg: true,
+        graphiql: true,
+        enhanceGraphiql: true,
+        appendPlugins: [RegisterTransactionPlugin],
+      },
+    ),
+  );
 
   app.get('/api/v1/hello', async (req, res, next) => {
     res.send('success');
