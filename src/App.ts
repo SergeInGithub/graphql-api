@@ -1,5 +1,6 @@
 import postgraphile from 'postgraphile';
 import express from 'express';
+import cors from 'cors';
 import { DataSource } from 'typeorm';
 import { Product } from './entity/Product';
 import { Category } from './entity/Category';
@@ -59,6 +60,7 @@ const RegisterTransactionPlugin = makeExtendSchemaPlugin((_build) => {
 const App = () => {
   const app = express();
   app.use(express.json());
+  app.use(cors());
   app.use(
     postgraphile(
       `postgres://postgres:TakingAction@localhost:5432/catalog_db`,
