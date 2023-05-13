@@ -7,8 +7,6 @@ This is A full-stack app built to explore and demonstrate some advantages of bui
 
 ## 🔮 Tech Stack
 
-- Tailwind CSS
-- React
 - Typescript
 - Node.js
 - Express
